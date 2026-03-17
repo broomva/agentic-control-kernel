@@ -1,0 +1,124 @@
+# Agentic Control Kernel — Policy Template
+# Control-systems-aware setpoints, gates, and profiles.
+# Install into target repo's .control/policy.yaml
+
+version: "1.0"
+profile: governed  # baseline | governed | autonomous
+
+# === Setpoints ===
+# Target metrics the control system should maintain.
+
+setpoints:
+  # Governance layer
+  - id: S1
+    name: "gate_pass_rate"
+    target: 0.85
+    alert_below: 0.70
+    measurement: "smoke + check + test pass rate"
+    severity: blocking
+
+  - id: S2
+    name: "audit_pass_rate"
+    target: 1.0
+    alert_below: 0.95
+    measurement: "make control-audit exit code"
+    severity: blocking
+
+  # Safety layer
+  - id: S3
+    name: "constraint_violation_rate"
+    target: 0.0
+    alert_above: 0.0
+    measurement: "hard constraint violations per control cycle"
+    severity: blocking
+
+  - id: S4
+    name: "shield_intervention_rate"
+    target: 0.0
+    alert_above: 0.05
+    measurement: "fraction of actions modified by safety shield"
+    severity: informational
+
+  - id: S5
+    name: "shield_feasibility_rate"
+    target: 1.0
+    alert_below: 0.99
+    measurement: "fraction of control cycles where shield found feasible solution"
+    severity: blocking
+
+  # Controller performance
+  - id: S6
+    name: "primary_objective"
+    target: null  # Set per-plant
+    measurement: "evaluator primary metric"
+    severity: informational
+
+  - id: S7
+    name: "solve_time_p99_ms"
+    target: null  # Set per-plant
+    measurement: "99th percentile controller solve time"
+    severity: informational
+
+  # Improvement layer
+  - id: S8
+    name: "egri_promotion_rate"
+    target: 0.30
+    alert_below: 0.10
+    measurement: "fraction of EGRI trials that result in promotion"
+    severity: informational
+
+  - id: S9
+    name: "egri_regression_rate"
+    target: 0.0
+    alert_above: 0.05
+    measurement: "fraction of promoted versions later rolled back"
+    severity: blocking
+
+# === Gates ===
+# Hard and soft constraints on agent actions.
+
+gates:
+  hard:
+    - id: G1
+      rule: "LLM must not call Plant directly — only Controller or MetaController tools"
+      measurement: "tool_call.target not in ['Plant.apply', 'Plant.reset']"
+
+    - id: G2
+      rule: "Safety shield must not be bypassed or disabled"
+      measurement: "shield.enabled == true for all control cycles"
+
+    - id: G3
+      rule: "Constraint violations halt execution"
+      measurement: "constraint_violation_count == 0"
+
+    - id: G4
+      rule: "EGRI evaluator and artifact must not be mutated in the same trial"
+      measurement: "mutation.targets intersection evaluator.paths == empty"
+
+  soft:
+    - id: G5
+      rule: "Shield intervention rate should stay below 5%"
+      measurement: "shield_intervention_rate <= 0.05"
+
+    - id: G6
+      rule: "Prefer conservative directives when uncertainty is high"
+      measurement: "advisory — check estimated uncertainty before directive emission"
+
+# === Profiles ===
+# Progressive autonomy levels.
+
+profiles:
+  baseline:
+    description: "Minimal — smoke/check/test gates only, no control kernel"
+    gates: []
+    egri: disabled
+
+  governed:
+    description: "Standard — all gates active, EGRI in sandbox mode"
+    gates: [G1, G2, G3, G4, G5, G6]
+    egri: sandbox
+
+  autonomous:
+    description: "Full — auto-promote EGRI, reduced human approval"
+    gates: [G1, G2, G3, G4]
+    egri: auto-promote

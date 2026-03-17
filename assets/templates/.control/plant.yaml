@@ -1,0 +1,59 @@
+# Agentic Control Kernel — Plant Configuration Template
+# Define the system being controlled: its state, actions, constraints, and loop rates.
+# See references/plant-interface.md for full API spec.
+
+plant:
+  name: ""             # Human-readable name
+  type: cyber          # physical | cyber-physical | cyber
+
+  # State definition
+  state:
+    measured:
+      # Direct sensor readings / metrics
+      - name: ""
+        type: ""       # float | int | enum | string | bool
+        unit: ""       # Optional unit (ms, percent, count, etc.)
+        # bounds: [min, max]  # Optional bounds for numeric types
+        # values: []          # Required for enum type
+    estimated:
+      # Inferred / model-predicted signals
+      - name: ""
+        type: ""
+        estimator: ""  # Name of estimator that produces this
+        # uncertainty_type: gaussian | bounds | categorical
+    context:
+      # Semantic fields (branch, user, session, etc.)
+      - name: ""
+        type: string
+
+  # Action definition
+  actions:
+    - name: ""
+      type: discrete   # discrete | continuous | parameter_update
+      description: ""
+      parameters: {}   # Action-specific parameters
+      # bounds: {}     # For continuous actions: {min: [], max: []}
+      destructive: false  # If true, requires approval gate
+
+  # Constraint definition
+  constraints:
+    hard:
+      - ""  # Constraints that must never be violated
+    soft:
+      - ""  # Constraints that should be satisfied but can be relaxed
+
+  # Loop rate configuration
+  loop_rates:
+    inner: null        # null for cyber plants, ms for physical
+    supervisory: 30s   # LLM decision cadence
+    improvement: 1h    # EGRI cycle cadence
+
+  # Safety shield configuration
+  shield:
+    type: policy-gate  # cbf-qp | policy-gate | rule-based | composite
+    enabled: true
+    fallback_action: "" # Action to take when shield is infeasible
+    # cbf:             # For CBF-QP shields:
+    #   barrier_function: ""
+    #   class_k_gain: 1.0
+    #   solver: osqp
