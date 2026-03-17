@@ -116,6 +116,7 @@ See [references/architecture.md](references/architecture.md) for the full role t
 - **[orchestration-patterns.md](references/orchestration-patterns.md)** — Symphony daemon patterns for multi-agent dispatch
 - **[consciousness-stack.md](references/consciousness-stack.md)** — Memory/knowledge/episodic integration
 - **[failure-modes.md](references/failure-modes.md)** — Mitigations catalog for LLM-in-the-loop control
+- **[deep-research-report.md](references/deep-research-report.md)** — Original research report and project plan: formal control theory, literature survey, prototype roadmap
 
 ## Schemas
 
