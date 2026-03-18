@@ -1,3 +1,14 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+type: spec
+status: active
+area: plant
+created: 2026-03-17
+---
+
 # Plant Interface
 
 Standardized API contracts for the control kernel. Language-agnostic;

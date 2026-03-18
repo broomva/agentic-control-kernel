@@ -1,3 +1,14 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+type: spec
+status: active
+area: control-loop
+created: 2026-03-17
+---
+
 # Multi-Rate Hierarchy
 
 Agent runtimes are message-driven, tool-mediated, and subject to timeouts and

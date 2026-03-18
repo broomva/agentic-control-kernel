@@ -1,3 +1,14 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+type: spec
+status: active
+area: world-model
+created: 2026-03-17
+---
+
 # World Models
 
 Learned dynamics, digital twins, and data-driven prediction methods

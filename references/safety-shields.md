@@ -1,3 +1,15 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+  - security
+type: spec
+status: active
+area: safety
+created: 2026-03-17
+---
+
 # Safety Shields
 
 Two distinct safety layers protect agent-controlled systems:

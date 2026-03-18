@@ -20,15 +20,17 @@ description: >
 A purely knowledge-based metalayer that unifies six subsystems into a single
 installable skill for any project:
 
-| Layer | Source | Role |
-|-------|--------|------|
+| Layer | Source / Crates | Role |
+|-------|----------------|------|
 | Governance | control-metalayer-loop | Setpoints, sensors, gates, policy, profiles |
-| Improvement | autoany (EGRI) | Evaluator-governed recursive improvement |
-| Orchestration | symphony | Poll/dispatch/worker/reconcile daemon patterns |
-| Episodic Memory | knowledge-graph-memory | Conversation logs → Obsidian bridge |
+| Improvement | `autoany_core` + `autoany-aios` + `autoany-lago` | EGRI microkernel, Arcan execution, Lago ledger |
+| Orchestration | `symphony-orchestrator` + `symphony-arcan` | Poll/dispatch/worker/reconcile via Arcan HTTP |
+| Runtime | Life (`arcan`, `lago`, `autonomic`, `praxis`, `spaces`) | Agent sessions, event journal, homeostasis, networking |
+| Protocol | `aios-protocol` | Canonical types — shared vocabulary across all crates |
+| Episodic Memory | knowledge-graph-memory | Conversation logs -> Obsidian bridge |
 | Consciousness | agent-consciousness | Three-substrate persistent context |
 | QA/Actuation | gstack | Headless browser, workflow skills |
-| **Control Kernel** | **this skill (new)** | Plant interface, safety shields, typed schemas, multi-rate hierarchy |
+| **Control Kernel** | **this skill** | Plant interface, safety shields, typed schemas, multi-rate hierarchy |
 
 ## Core Law
 
@@ -41,7 +43,7 @@ installable skill for any project:
 ### 1. Bootstrap a project
 
 ```bash
-python3 scripts/control_kernel_init.py <repo-path> [--profile governed]
+python3 scripts/control_kernel_init.py <repo-path> [--profile governed] [--runtime arcan] [--ledger lago]
 ```
 
 This installs into the target repo:
@@ -107,7 +109,8 @@ See [references/architecture.md](references/architecture.md) for the full role t
 
 ## Reference Guide
 
-- **[architecture.md](references/architecture.md)** — 5-layer stack, control-flow diagram, component mapping
+- **[architecture.md](references/architecture.md)** — 5-layer stack, realized crate graph, control-flow diagram, component mapping
+- **[integration-map.md](references/integration-map.md)** — Adapter crate boundary map, configuration, direction rule
 - **[plant-interface.md](references/plant-interface.md)** — Plant/Estimator/Controller/Shield/Evaluator API specs
 - **[safety-shields.md](references/safety-shields.md)** — CBF-QP, policy gates, containment, failure modes
 - **[multi-rate-hierarchy.md](references/multi-rate-hierarchy.md)** — Loop rates, LLM placement, heuristics
@@ -125,13 +128,16 @@ JSON Schemas in `schemas/` enforce typed interfaces:
 - `action.schema.json` — Control directives (θ_t)
 - `trace.schema.json` — Ledger entries (autoany-compatible)
 - `evaluator.schema.json` — Score vectors, promotion decisions
+- `egri-event.schema.json` — EGRI trial events for Lago persistence via EventKind::Custom
 
 ## Existing Skill Dependencies
 
 This skill synthesizes and references (does not duplicate) these existing skills:
 - **control-metalayer-loop** — Use for `.control/` bootstrapping and governance primitives
-- **autoany** — Use for EGRI loop execution and problem-spec compilation
+- **autoany** — EGRI loop execution via `autoany-aios` (Arcan sessions) and `autoany-lago` (Lago ledger)
+- **symphony** — Orchestration dispatch via `symphony-arcan` (Arcan HTTP runtime)
+- **life** — `arcan` (agent sessions), `lago` (event journal), `autonomic` (homeostasis), `spaces` (networking)
+- **aios-protocol** — Canonical types shared across all adapter crates
 - **agent-consciousness** — Use for consciousness stack setup
 - **knowledge-graph-memory** — Use for conversation bridge to Obsidian
 - **gstack** — Use for QA actuation via headless browser
-- Symphony patterns documented in [references/orchestration-patterns.md](references/orchestration-patterns.md)

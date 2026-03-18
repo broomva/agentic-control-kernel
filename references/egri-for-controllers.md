@@ -1,3 +1,14 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+type: spec
+status: active
+area: egri
+created: 2026-03-17
+---
+
 # EGRI for Controllers
 
 Apply Autoany's Evaluator-Governed Recursive Improvement to controller tuning,
@@ -107,6 +118,49 @@ autonomy:
 4. **Holdout scenarios for anti-gaming** — evaluator uses scenarios not visible to the mutator
 5. **Shield intervention rate is a first-class metric** — rising rate signals degrading controller
 6. **Rollback to last known-good** — if promoted controller fails in deployment, immediate revert
+
+## Concrete Wiring: ArcanExecutor + LagoLedger
+
+The realized stack executes EGRI loops via two adapter crates:
+
+- **`autoany-aios`** (`autoany/autoany-aios/`) — `ArcanExecutor` implements the
+  autoany `Executor` trait by creating Arcan sessions. Each trial runs inside a
+  capability-scoped session with policy constraints from the problem-spec.
+- **`autoany-lago`** (`autoany/autoany-lago/`) — `LagoLedger` implements the
+  autoany `Ledger` trait by writing `EventKind::Custom` entries with `"egri."` prefix.
+  Schema: `schemas/egri-event.schema.json`.
+
+### Wiring an EGRI loop
+
+```rust
+use autoany_core::EgriLoop;
+use autoany_aios::ArcanExecutor;
+use autoany_lago::LagoLedger;
+
+let executor = ArcanExecutor::new("http://localhost:3000")
+    .with_policy(problem_spec.policy());
+
+let ledger = LagoLedger::new("http://localhost:3001")
+    .with_prefix("egri.");
+
+let mut loop_ = EgriLoop::new(problem_spec, executor, ledger);
+loop_.run().await?;
+```
+
+### New autoany_core modules
+
+| Module | Purpose |
+|--------|---------|
+| `dead_ends.rs` | Detect and record dead-end states to avoid revisiting |
+| `stagnation.rs` | Detect stagnation across consecutive trials |
+| `strategy.rs` | Distill mutation strategies from trial history |
+| `inheritance.rs` | Carry learned context across independent EGRI runs |
+
+### Cross-reference with Lago
+
+Every trial event stored via `LagoLedger` includes an optional `session_id` field
+that links back to the Arcan session. This enables post-hoc correlation between
+EGRI trial outcomes and the fine-grained agent event stream in Lago's journal.
 
 ## Nesting: EGRI Over EGRI
 

@@ -1,20 +1,61 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+type: architecture
+status: active
+area: system
+created: 2026-03-17
+---
+
 # Architecture
 
 The agentic control kernel organizes agent-controlled systems into five layers,
 each with clear responsibilities, typed interfaces, and explicit safety boundaries.
 
+## Realized Crate Dependency Graph
+
+```
+aios-protocol (canonical types — shared vocabulary)
+      |
+      +-- Life Runtime (Arcan :3000, Lago :3001, Autonomic :3002, Praxis, Spaces)
+      |         |
+      |   +-----+------------------------------+
+      |   |                                     |
+      |   v                                     v
+      |  autoany-aios (adapter)           symphony-arcan (adapter)
+      |   |                                     |
+      |   v                                     v
+      |  autoany_core                      symphony-orchestrator
+      |  (EGRI microkernel)               (dispatch + lifecycle)
+      |
+      +-- Agentic Control Kernel (skill: schemas + docs reflecting the realized stack)
+```
+
+See [integration-map.md](integration-map.md) for the full adapter crate table.
+
 ## The Five-Layer Stack
 
-| # | Layer | Responsibility | Key Artifacts |
-|---|-------|---------------|---------------|
+| # | Layer | Responsibility | Key Artifacts / Crates |
+|---|-------|---------------|------------------------|
 | 1 | **Governance** | Setpoints, policy gates, profiles, audit | `.control/policy.yaml`, `METALAYER.md` |
 | 2 | **Harness** | Deterministic commands, CI gates, observability | `Makefile.control`, `scripts/control/` |
 | 3 | **Control Kernel** | Plant interface, estimators, controllers, shields | `schemas/`, `.control/plant.yaml` |
-| 4 | **Orchestration** | Multi-agent dispatch, workspace safety, reconciliation | `WORKFLOW.md`, symphony daemon |
-| 5 | **Improvement** | EGRI loops, evaluators, ledger, promotion | `problem-spec.yaml`, `ledger.jsonl` |
+| 4 | **Orchestration** | Multi-agent dispatch via Arcan, workspace safety, reconciliation | `WORKFLOW.md`, `symphony-arcan`, `symphony-orchestrator` |
+| 5 | **Improvement** | EGRI loops via Arcan sessions, ledger via Lago | `autoany-aios`, `autoany-lago`, `autoany_core` |
 
 Cross-cutting: **Consciousness stack** (auto-memory + conversation bridge + knowledge graph)
 provides episodic and declarative memory across sessions.
+
+### autoany_core Modules
+
+| Module | Purpose |
+|--------|---------|
+| `dead_ends.rs` | Dead-end state detection and tracking |
+| `stagnation.rs` | Stagnation detection across trial runs |
+| `strategy.rs` | Strategy distillation from trial history |
+| `inheritance.rs` | Cross-run state and knowledge inheritance |
 
 ## Formal Control Law
 
@@ -63,20 +104,24 @@ The runtime logs trace entry ℓ_t to ledger L and repeats.
 Plant ──observe()──▶ Runtime ──update estimator──▶ b_t
                         │
                         ▼
-              LLM Agent: decision(b_t)
+              LLM Agent: decision(b_t)              [via Arcan session]
                         │
                         ▼ θ_t (typed directive)
               Controller: propose(b_t, θ_t)
                         │
                         ▼ proposed u_t
-              Safety Shield: filter(u_t, b_t)
+              Safety Shield: filter(u_t, b_t)       [Autonomic advisory gate]
                         │
                         ▼ safe u_t + certificate
               Plant: apply(safe u_t)
                         │
                         ▼ result + y_{t+1}
-              Evaluator/Ledger: append trace
+              Evaluator/Ledger: append trace         [Lago EventKind::Custom]
 ```
+
+Runtime options:
+- `runtime.kind: subprocess` — spawn agent as local subprocess (default, legacy)
+- `runtime.kind: arcan` — dispatch via Arcan HTTP sessions (realized stack)
 
 ## LLM Roles in the Control Stack
 

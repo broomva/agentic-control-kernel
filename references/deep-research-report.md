@@ -1,3 +1,14 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - reference
+type: reference
+status: active
+area: research
+created: 2026-03-17
+---
+
 # Unifying an Agentic Control Metalayer for LLM-as-Controller Systems
 
 ## Executive summary

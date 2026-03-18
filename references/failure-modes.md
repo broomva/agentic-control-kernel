@@ -1,3 +1,15 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+  - security
+type: reference
+status: active
+area: safety
+created: 2026-03-17
+---
+
 # Failure Modes
 
 Catalog of failure modes when LLMs participate in control systems,

@@ -1,3 +1,15 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+  - governance
+type: architecture
+status: active
+area: consciousness
+created: 2026-03-17
+---
+
 # Consciousness Stack
 
 Persistent cross-session context for autonomous agents. Synthesizes three substrates

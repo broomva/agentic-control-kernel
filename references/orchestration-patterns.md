@@ -1,3 +1,14 @@
+---
+tags:
+  - broomva
+  - control-kernel
+  - architecture
+type: reference
+status: active
+area: orchestration
+created: 2026-03-17
+---
+
 # Orchestration Patterns
 
 Multi-agent orchestration based on the Symphony daemon architecture.
@@ -111,3 +122,36 @@ Symphony exposes runtime state via HTTP:
 | `/metrics` | GET | Prometheus metrics |
 
 Use these for observability dashboards and integration with CI/CD.
+
+## Symphony + Arcan Runtime
+
+The realized stack replaces Symphony's default subprocess-based agent spawning
+with dispatch via Arcan HTTP sessions. This is configured in WORKFLOW.md:
+
+```yaml
+runtime:
+  kind: arcan           # "subprocess" (default) | "arcan"
+  base_url: "http://localhost:3000"
+  policy:
+    allow_capabilities: ["fs:read:**", "fs:write:**", "exec:*"]
+```
+
+### How it works
+
+The `symphony-arcan` adapter crate (`symphony/crates/symphony-arcan/`) implements
+Symphony's `Runtime` trait by translating dispatch calls into Arcan HTTP requests:
+
+1. **Session creation** — each worker maps to an Arcan session with scoped capabilities
+2. **Turn loop** — Symphony drives turns via Arcan's session API instead of JSON-RPC subprocess
+3. **Lifecycle** — session cleanup, timeout enforcement, and token accounting handled by Arcan
+4. **Observability** — Arcan events flow to Lago automatically via `arcan-lago`, giving
+   Symphony workers a unified audit trail without extra instrumentation
+
+### When to use Arcan runtime vs subprocess
+
+| Scenario | Runtime | Why |
+|----------|---------|-----|
+| Local development, simple agents | `subprocess` | Lower overhead, no Life dependency |
+| Production, multi-agent, auditable | `arcan` | Capability scoping, Lago journal, Autonomic gating |
+| EGRI loops over controller artifacts | `arcan` | Trial isolation + automatic ledger via `autoany-lago` |
+| Distributed agents across machines | `arcan` + Spaces | Arcan sessions can span nodes via Spaces networking |
